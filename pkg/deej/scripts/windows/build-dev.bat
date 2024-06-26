@@ -21,6 +21,8 @@ GOTO DONE
 
 :BUILDERROR
 ECHO Failed to build deej in development mode! See above output for details.
+PAUSE
 EXIT /B 1
 
 :DONE
+PAUSE

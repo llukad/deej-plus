@@ -1,4 +1,4 @@
-// Package deej provides a machine-side client that pairs with an Arduino
+// package deej provides a machine-side client that pairs with an Arduino
 // chip to form a tactile, physical volume control system/
 package deej
 
@@ -9,7 +9,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/omriharel/deej/pkg/deej/util"
+	"github.com/llukad/deej-plus/pkg/deej/util"
 )
 
 const (

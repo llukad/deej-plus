@@ -1,3 +1,24 @@
+# deej-plus
+
+This is an "upgrade" to the deej project. Besides volume sliders, I incorporated buttons and knobs to do many different things with my computer.
+
+The additional features are the following:
+
+- Launch Spotify hotkey
+- Media controls
+- Monitor brightness control
+- Monitor color profiles hotkeys
+- Delayed shutdown timer
+- Open website hotkey
+- Run a command in a terminal hotkey
+- VPN on/off switch for Wireguard tunnel
+
+**These features were only tested on Windows, and for some of them I can say that they for sure won't work elswhere!**
+
+The design of the actual control panel can be found [here](https://cad.onshape.com/documents/3d5165aa824e17ed783c0301/v/a0748815f4f98cb6fc5b54ee/e/60d04f379d54e76f55110f3a?renderMode=0&uiState=667be638b5050260aec877bb)
+
+**There's no tutorial about how to make this project yourself, so I hope you know golang and arduino. If you need some help, feel free to contact me.**
+
 # deej
 
 deej is an **open-source hardware volume mixer** for Windows and Linux PCs. It lets you use real-life sliders (like a DJ!) to **seamlessly control the volumes of different apps** (such as your music player, the game you're playing and your voice chat session) without having to stop what you're doing.
@@ -10,7 +31,7 @@ deej is an **open-source hardware volume mixer** for Windows and Linux PCs. It l
 
 deej consists of a [lightweight desktop client](#features) written in Go, and an Arduino-based hardware setup that's simple and cheap to build. [**Check out some versions built by members of our community!**](./community.md)
 
-**[Download the latest release](https://github.com/omriharel/deej/releases/latest) | [Video demonstration](https://youtu.be/VoByJ4USMr8) | [Build video by Tech Always](https://youtu.be/x2yXbFiiAeI)**
+**[Download the latest release](https://github.com/llukad/deej-plus/releases/latest) | [Video demonstration](https://youtu.be/VoByJ4USMr8) | [Build video by Tech Always](https://youtu.be/x2yXbFiiAeI)**
 
 ![deej](assets/build-3d-annotated.png)
 
@@ -39,7 +60,7 @@ deej consists of a [lightweight desktop client](#features) written in Go, and an
 
 ## Features
 
-deej is written in Go and [distributed](https://github.com/omriharel/deej/releases/latest) as a portable (no installer needed) executable.
+deej is written in Go and [distributed](https://github.com/llukad/deej-plus/releases/latest) as a portable (no installer needed) executable.
 
 - Bind apps to different sliders
   - Bind multiple apps per slider (i.e. one slider for all your games)
@@ -53,7 +74,7 @@ deej is written in Go and [distributed](https://github.com/omriharel/deej/releas
 - Runs from your system tray
 - Helpful notifications to let you know if something isn't working
 
-> **Looking for the older Python version?** It's no longer maintained, but you can always find it in the [`legacy-python` branch](https://github.com/omriharel/deej/tree/legacy-python).
+> **Looking for the older Python version?** It's no longer maintained, but you can always find it in the [`legacy-python` branch](https://github.com/llukad/deej-plus/tree/legacy-python).
 
 ## How it works
 
@@ -177,7 +198,7 @@ With many different 3D-printed designs being added to our [community showcase](.
 
 ### Download and installation
 
-- Head over to the [releases page](https://github.com/omriharel/deej/releases) and download the [latest version](https://github.com/omriharel/deej/releases/latest)'s executable and configuration file (`deej.exe` and `config.yaml`)
+- Head over to the [releases page](https://github.com/llukad/deej-plus/releases) and download the [latest version](https://github.com/llukad/deej-plus/releases/latest)'s executable and configuration file (`deej.exe` and `config.yaml`)
 - Place them in the same directory anywhere on your machine
 - (Optional, on Windows) Create a shortcut to `deej.exe` and copy it to `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup` to have deej run on boot
 
@@ -185,7 +206,7 @@ With many different 3D-printed designs being added to our [community showcase](.
 
 If you'd rather not download a compiled executable, or want to extend deej or modify it to your needs, feel free to clone the repository and build it yourself. All you need is a Go 1.14 (or above) environment on your machine. If you go this route, make sure to check out the [developer scripts](./pkg/deej/scripts).
 
-Like other Go packages, you can also use the `go get` tool: `go get -u github.com/omriharel/deej`. Please note that the package code now resides in the `pkg/deej` directory, and needs to be imported from there if used inside another project.
+Like other Go packages, you can also use the `go get` tool: `go get -u github.com/llukad/deej-plus`. Please note that the package code now resides in the `pkg/deej` directory, and needs to be imported from there if used inside another project.
 
 If you need any help with this, please [join our Discord server](https://discord.gg/nf88NJu).
 

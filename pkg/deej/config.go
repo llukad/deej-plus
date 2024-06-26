@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"github.com/omriharel/deej/pkg/deej/util"
+	"github.com/llukad/deej-plus/pkg/deej/util"
 )
 
 // CanonicalConfig provides application-wide access to configuration fields,
@@ -35,6 +35,15 @@ type CanonicalConfig struct {
 
 	userConfig     *viper.Viper
 	internalConfig *viper.Viper
+
+	VPN struct {
+		Svc string 
+		Conf string 
+	}
+
+	terminalCommand string
+
+	openWebsite string
 }
 
 const (
@@ -53,6 +62,12 @@ const (
 	configKeyCOMPort             = "com_port"
 	configKeyBaudRate            = "baud_rate"
 	configKeyNoiseReductionLevel = "noise_reduction"
+
+	configKeyVPNSvc = "vpn_service_name"
+	confgKeyVPNConf = "vpn_config_path"
+
+	configKeyTerminalCommand = "terminal_command"
+	configKeyOpenWebsite = "open_website"
 
 	defaultCOMPort  = "COM4"
 	defaultBaudRate = 9600
@@ -238,6 +253,13 @@ func (cc *CanonicalConfig) populateFromVipers() error {
 
 	cc.InvertSliders = cc.userConfig.GetBool(configKeyInvertSliders)
 	cc.NoiseReductionLevel = cc.userConfig.GetString(configKeyNoiseReductionLevel)
+
+	cc.VPN.Svc = cc.userConfig.GetString(configKeyVPNSvc)
+	cc.VPN.Conf = cc.userConfig.GetString(confgKeyVPNConf)
+
+	cc.terminalCommand = cc.userConfig.GetString(configKeyTerminalCommand)
+
+	cc.openWebsite = cc.userConfig.GetString(configKeyOpenWebsite)
 
 	cc.logger.Debug("Populated config fields from vipers")
 

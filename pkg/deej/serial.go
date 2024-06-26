@@ -5,15 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"regexp"
+	// "regexp"
 	"strconv"
 	"strings"
 	"time"
-
+	"math"
 	"github.com/jacobsa/go-serial/serial"
 	"go.uber.org/zap"
 
-	"github.com/omriharel/deej/pkg/deej/util"
+	"github.com/llukad/deej-plus/pkg/deej/util"
 )
 
 // SerialIO provides a deej-aware abstraction layer to managing serial I/O
@@ -41,7 +41,11 @@ type SliderMoveEvent struct {
 	PercentValue float32
 }
 
-var expectedLinePattern = regexp.MustCompile(`^\d{1,4}(\|\d{1,4})*\r\n$`)
+var buttonValues []bool
+var brightnessValue int
+var timerValue int
+
+// var expectedLinePattern = regexp.MustCompile(`^\d{1,4}(\|\d{1,4})*\/\d{1,4}(\|\d{1,4})*\/\d{1,4}$`)
 
 // NewSerialIO creates a SerialIO instance that uses the provided deej
 // instance's connection info to establish communications with the arduino chip
@@ -231,15 +235,21 @@ func (sio *SerialIO) handleLine(logger *zap.SugaredLogger, line string) {
 	// this function receives an unsanitized line which is guaranteed to end with LF,
 	// but most lines will end with CRLF. it may also have garbage instead of
 	// deej-formatted values, so we must check for that! just ignore bad ones
-	if !expectedLinePattern.MatchString(line) {
-		return
-	}
+	// if !expectedLinePattern.MatchString(line) {
+	// 	logger.Infow(line)
+	// 	// logger.Warnw("Wrong Line!")
+	// 	return
+	// }
 
 	// trim the suffix
 	line = strings.TrimSuffix(line, "\r\n")
 
+	//split line on "/"
+
+	splitLineAll := strings.Split(line, "/")
+
 	// split on pipe (|), this gives a slice of numerical strings between "0" and "1023"
-	splitLine := strings.Split(line, "|")
+	splitLine := strings.Split(splitLineAll[0], "|")
 	numSliders := len(splitLine)
 
 	// update our slider count, if needed - this will send slider move events for all
@@ -304,4 +314,225 @@ func (sio *SerialIO) handleLine(logger *zap.SugaredLogger, line string) {
 			}
 		}
 	}
+
+	if len(splitLineAll) < 3{
+		return
+	}
+
+	buttons := strings.Split(splitLineAll[1], "|")
+	numButtons := len(buttons)
+
+	buttonsOk := true
+
+	for _, button := range buttons{
+		if!((button == "1") || (button == "0")){
+			logger.Debugw("Wrong button values! Ignoring...")
+			buttonsOk = false
+		}
+	}
+
+	if buttonsOk{
+		boolButtons, err := buttonsToBool(buttons)
+		if err != nil {
+			logger.Debugw("Cant parse button values!")
+		}else{
+			if numButtons == len(buttonValues){
+				activatedButtons := make([]bool, numButtons)
+				deactivatedButtons := make([]bool, numButtons)
+				for i, button := range boolButtons{
+					if button && !buttonValues[i]{
+						activatedButtons[i] = true
+					}else{
+						activatedButtons[i] = false
+					}
+
+					if !button && buttonValues[i]{
+						deactivatedButtons[i] = true
+					}else{
+						deactivatedButtons[i] = false
+					}
+				}
+				// HERE WE DEFINE WHAT THE BUTTONS DO
+
+				if activatedButtons[0]{
+					err = OpenWebsite(sio.deej.config.openWebsite)
+					if err != nil {
+						logger.Debugw("Cant open website!", err)
+					}else{
+						logger.Infow("Website opened!")
+					}
+				}
+
+
+				if activatedButtons[2]{
+					err = ExecuteInTerminal(sio.deej.config.terminalCommand)
+					if err != nil {
+						logger.Debugw("Cant run the command!", err)
+					}else{
+						logger.Infow("Command ran!")
+					}
+				}
+
+
+				if activatedButtons[4]{
+					err = ChangeEyeProtection(0, 4, brightnessValue)
+					if err != nil {
+						logger.Debugw("Cant set eye protection!", err)
+					}else{
+						logger.Infow("Eye Protection set!")
+					}
+				}
+				if activatedButtons[5]{
+					err = ChangeColorMode(0, 33, brightnessValue)
+					if err != nil {
+						logger.Debugw("Cant change color mode!", err)
+					}else{
+						logger.Infow("Color mode set to rec.709!")
+					}
+				}
+				if activatedButtons[6]{
+					err = ShutdownIn(timerValue)
+					if err != nil {
+						logger.Debugw("Cant schedule shutdown!", err)
+					}else{
+						logger.Infow("Shutdown scheduled!")
+					}
+				}
+				if activatedButtons[7]{
+					err = StartVPN(sio.deej.config.VPN.Svc, sio.deej.config.VPN.Conf)
+					if err != nil {
+						logger.Debugw("Cant start VPN!", err)
+						sio.deej.notifier.Notify("Error!", "Can't start the VPN!")
+					}else{
+						logger.Infow("VPN started!")
+						sio.deej.notifier.Notify("VPN", "VPN started!")
+					}
+				}
+				if deactivatedButtons[7]{
+					err = StopVPN(sio.deej.config.VPN.Svc)
+					if err != nil {
+						logger.Debugw("Cant stop VPN!", err)
+						sio.deej.notifier.Notify("Error!", "Can't stop the VPN!")
+					}else{
+						logger.Infow("VPN stopped!")
+						sio.deej.notifier.Notify("VPN", "VPN stopped!")
+					}
+				}
+				if activatedButtons[8]{
+					err = LaunchApp("spotify.exe")
+					if err != nil {
+						logger.Debugw("Cant open spotify!", err)
+					}else{
+						logger.Infow("Spotify opened!")
+					}
+				}
+				if activatedButtons[9]{
+					err = PrevTrack()
+					if err != nil {
+						logger.Debugw("Cant do previous track", err)
+					}else{
+						logger.Infow("Previous track activated!")
+					}
+				}
+				if activatedButtons[10]{
+					err = PlayPause()
+					if err != nil {
+						logger.Debugw("Cant do play/pause", err)
+					}else{
+						logger.Infow("Play/pause activated!")
+					}
+				}
+				if activatedButtons[11]{
+					err = NextTrack()
+					if err != nil {
+						logger.Debugw("Cant do next track", err)
+					}else{
+						logger.Infow("Next track activated!")
+					}
+				}
+
+			}
+			buttonValues = boolButtons
+		}
+	}
+
+	knobs := strings.Split(splitLineAll[2], "|")
+	// numKnobs := len(knobs)
+
+	knobsOk := true
+
+	for _, knob := range knobs{
+		knobVal, err := strconv.Atoi(knob)
+		if err != nil{
+			logger.Warnw("Cant parse knob values!", err)
+		}
+		if ((knobVal > 1023) && (knobVal < 0)){
+			logger.Debugw("Wrong knob values! Ignoring...")
+			knobsOk = false
+		}
+	}
+
+	if knobsOk{
+		timeVal, _ := strconv.Atoi(knobs[0])
+		timerValue = convertToTime(timeVal)
+
+		val, _ := strconv.Atoi(knobs[1])
+		brghtVal := convertToBrightness(val)
+
+		if brghtVal != brightnessValue{
+			err := ChangeBrightness(0, brghtVal)
+			if err != nil{
+				logger.Warnw("Failed to change brightness:", err)
+			}else{
+				brightnessValue = brghtVal
+				logger.Info("Changed brightness to: ", brghtVal)
+			}
+			
+		}
+	}
+}
+
+func buttonsToBool(buttons []string) ([]bool, error){
+	boolButtons := make([]bool, len(buttons))
+	for i, button := range buttons{
+		if button == "1" {
+			boolButtons[i] = false
+		}else if button == "0" {
+			boolButtons[i] = true
+		}else{
+			return nil, fmt.Errorf("Cant convert button states")
+		}
+	}
+
+	return boolButtons, nil
+}
+
+func convertToBrightness(num int) int {
+        floatNum := float64(num) / 1024 * 100
+
+
+        roundedNum := math.Round(floatNum/10)*10
+
+        // Convert the rounded float back to an integer
+        result := int(roundedNum)
+
+        // If the result is less than 0, set it to 0
+        if result < 0 {
+                result = 0
+        }
+
+        // If the result is greater than 100, set it to 100
+        if result > 100 {
+                result = 100
+        }
+
+        return result
+}
+
+func convertToTime(num int) int {
+	maxTime := 3600
+	minTime := 0
+
+	mappedValue := minTime + (num * (maxTime - minTime) / 1023)
+	return mappedValue
 }

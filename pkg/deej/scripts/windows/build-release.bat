@@ -21,6 +21,9 @@ GOTO DONE
 
 :BUILDERROR
 ECHO Failed to build deej in release mode! See above output for details.
+PAUSE
 EXIT /B 1
 
 :DONE
+PAUSE
+

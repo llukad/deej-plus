@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/llukad/deej-plus/pkg/deej"
 )
@@ -59,8 +60,18 @@ func main() {
 		d.SetVersion(versionString)
 	}
 
-	// onwards, to glory
-	if err = d.Initialize(); err != nil {
-		named.Fatalw("Failed to initialize deej", "error", err)
+	maxRetries := 10
+	retryDelay := 1 * time.Second
+	for i := 1; i <= maxRetries; i++ {
+		err = d.Initialize()
+		if err == nil {
+			break
+		}
+		if i < maxRetries {
+            named.Infow("Retrying...", i)
+            time.Sleep(retryDelay)
+        }else{
+        	named.Fatalw("Failed to initialize deej", "error", err)
+        }
 	}
 }
